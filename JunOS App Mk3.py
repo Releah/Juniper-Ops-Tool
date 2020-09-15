@@ -12,7 +12,7 @@ from jnpr.junos import Device
 from lxml import etree
 from jnpr.junos.utils.config import Config
 
-
+#blob
 
 ####----------------------------------------------------------------####
 ####---------------------------#tkinter#----------------------------####
