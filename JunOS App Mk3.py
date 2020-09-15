@@ -342,7 +342,6 @@ def interfaceStatus():
                 informationFromSwitch = connection.rpc.get_arp_table_information()
                 arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
                 aprTableDecoded = arpTableEncoded.splitlines()
-                print(aprTableDecoded)
                 for line in aprTableDecoded:
                     if switchPort in line:
                         index = aprTableDecoded.index(line)
