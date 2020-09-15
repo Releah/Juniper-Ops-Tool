@@ -28,6 +28,7 @@ mainWindow.resizable(False, False)
 ####----------------------------------------------------------------####
 interfaceRegEx = re.compile("ge-(0|[1-9])\/[0-9]\/(0|[0-9]|1[0-9]|2[0-9]|3[0-2])")
 vlanRegEx = re.compile("(?<=\>)(.*?)(?=\<)")
+macRegEx = re.compile("([0-9a-f][0-9a-f]):([0-9a-f][0-9a-f]):([0-9a-f][0-9a-f]):([0-9a-f][0-9a-f]):([0-9a-f][0-9a-f]):([0-9a-f][0-9a-f])")
 
 
 ####----------------------------------------------------------------####
@@ -241,35 +242,37 @@ def getIP():
 
 ####----------------------------------------------------------------####   
 # Get MAC - Not working
-# def getMAC():
-#     switchPort = SwitchPortEntry.get()
-#     IPEntry.delete(0, END)
-#     if connection is None:
-#         monitorARPCheckbox.deselect()
-#         TextBoxData.insert(END, "\nPlease logon.\n")
-#         TextBoxData.see("end")
-#     else:
-#         if switchPort == (''):
-#             TextBoxData.insert(END, "\nPlease enter a interface.\n")
-#             TextBoxData.see("end")
-#             return
-#         else:
-#             portReg = interfaceRegEx.search(switchPort)
-#             if portReg is None:
-#                 TextBoxData.insert(END, "\nInvalid interface. Please enter valid interface.\n")
-#                 TextBoxData.see("end")
-#                 return
-#             else:
-#                 switchPort = (switchPort+".0")
-#                 informationFromSwitch = connection.rpc.get_ethernet_switching_table_information(interface_name=switchPort)
-#                 ethernetTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode', pretty_print=True)
-#                 ethernetTableDecoded = ethernetTableEncoded.splitlines()
-#                 print(ethernetTableDecoded)
-#                 # for line in ethernetTableDecoded:
-#                 #     if switchPort in line:
-#                 #         index = ethernetTableDecoded.index(line)
-#                 #         IPAddress = aprTableDecoded[index -3]
-#                 #         print(IPAddress)
+def getMAC():
+     switchPort = SwitchPortEntry.get()
+     IPEntry.delete(0, END)
+     if connection is None:
+         monitorARPCheckbox.deselect()
+         TextBoxData.insert(END, "\nPlease logon.\n")
+         TextBoxData.see("end")
+     else:
+        if switchPort == (''):
+             TextBoxData.insert(END, "\nPlease enter a interface.\n")
+             TextBoxData.see("end")
+             return
+        else:
+            portReg = interfaceRegEx.search(switchPort)
+            if portReg is None:
+                TextBoxData.insert(END, "\nInvalid interface. Please enter valid interface.\n")
+                TextBoxData.see("end")
+                return
+            else:
+                switchPort = (switchPort+".0")
+                informationFromSwitch = connection.rpc.get_ethernet_switching_table_information()
+                ethernetTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode', pretty_print=True)
+                ethernetTableDecoded = ethernetTableEncoded.splitlines()
+                for line in ethernetTableDecoded:
+                    if switchPort in line:
+                        index = ethernetTableDecoded.index(line)
+                        macReg = ethernetTableDecoded[index -3]
+                        macReg1 = macRegEx.search(macReg)
+                        MACAddress = macReg1.group(0)
+                        return MACAddress
+
                         
 
 
@@ -323,9 +326,11 @@ def interfaceStatus():
         else:
             IPAddress = getIP()
             if IPAddress is None:
-                IPEntry.insert(END, "None Found")
-            else:
-                IPEntry.insert(END, IPAddress)
+                IPAddress = "---.---.---.---"
+                    
+            MACAdress = getMAC()
+            if MACAdress is None:
+                MACAdress = "--:--:--:--:--:--"
 
             filter = '<terse/><interface-name></interface-name>'
             informationFromSwitch = connection.rpc.get_interface_information(interface_name=switchPort, filter_xml=filter)
@@ -334,13 +339,13 @@ def interfaceStatus():
             adminStatus = splitString[3]
             operStatus = splitString[5]
 
-            filter = '<interfaces><interface><name>'+switchPort+'</name><unit><name>0</name><family><ethernet-switching><vlan><members/></vlan></ethernet-switching></family></unit></interface></interfaces>'
-            result2 = connection.rpc.get_config(filter_xml=filter)
-            interfaceVlan = etree.tostring(result2, encoding='unicode', pretty_print=True)
-            interfaceVlanList = interfaceVlan.split("\n")
-            vlanLine = interfaceVlanList[9]
-            currentVlan = vlanRegEx.search(vlanLine)
-            currentVlan = currentVlan.group(0)
+            #filter = '<interfaces><interface><name>'+switchPort+'</name><unit><name>0</name><family><ethernet-switching><vlan><members/></vlan></ethernet-switching></family></unit></interface></interfaces>'
+            #result2 = connection.rpc.get_config(filter_xml=filter)
+            #interfaceVlan = etree.tostring(result2, encoding='unicode', pretty_print=True)
+            #interfaceVlanList = interfaceVlan.split("\n")
+            #vlanLine = interfaceVlanList[9]
+            #currentVlan = vlanRegEx.search(vlanLine)
+            #currentVlan = currentVlan.group(0)
 
 #-------------------NEED TO CALL A FUNCTION HERE----------------------------------
             switchPort = (switchPort+".0")
@@ -350,16 +355,17 @@ def interfaceStatus():
             for line in aprTableDecoded:
                 if switchPort in line:
                     index = aprTableDecoded.index(line)
-                    MAC = aprTableDecoded[index -6]
             adminEntry.insert(END, adminStatus)
             operEntry.insert(END, operStatus)
-            vlanEntry.insert(END, currentVlan)
-            MACEntry.insert(END, MAC)
+            #vlanEntry.insert(END, currentVlan)
+            MACEntry.insert(END, MACAdress)
+            IPEntry.insert(END, IPAddress)
+
             
 #-------------------NEED TO CALL A FUNCTION HERE----------------------------------
 
 
-            TextBoxData.insert(END, "\nAdministratively: " +adminStatus+ "\t\t  |  Physically: " + operStatus+ "\t\t  |  Current Vlan : " +currentVlan+ "\n")
+            TextBoxData.insert(END, "\nAdministratively: " +adminStatus+ "\t\t  |  Physically: " + operStatus)#+ "\t\t  |  Current Vlan : " +currentVlan+ "\n")
             TextBoxData.see("end")
         
  
@@ -661,7 +667,7 @@ toggleAdminButton = Button(mainWindow, text="Admin Toggle", command=toggleAdmin)
 toggleAdminButton.config(font=("Verdana", 10, "bold"))
 toggleAdminButton.place(x=480, y=310, height=30, width=135)
 
-toggledot1xButton = Button(mainWindow, text="Toggle dot1x")#, command=getMAC)
+toggledot1xButton = Button(mainWindow, text="Toggle dot1x", command=getMAC)
 toggledot1xButton.config(font=("Verdana", 10, "bold"))
 toggledot1xButton.place(x=617, y=310, height=30, width=135)
 
@@ -689,7 +695,7 @@ hostipEntry.config(font=("Verdana", 10, "bold"))
 hostipEntry.place(x=120, y=300, height=25, width=200)
 
 SwitchPortEntry = Entry(mainWindow, justify='center')
-SwitchPortEntry.config(font=("Verdana", 10))
+SwitchPortEntry.config(font=("Verdana", 10, "bold"))
 SwitchPortEntry.place(x=120, y=330, height=25, width=200)
 
 adminEntry = Entry(mainWindow, text="Admin Status:", justify='center')
