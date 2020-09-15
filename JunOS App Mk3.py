@@ -273,7 +273,7 @@ def getMAC():
 
 
 ####----------------------------------------------------------------####
-# Get Vlan - Working
+# Get Vlan - Not Working
 def getVlan():
      switchPort = SwitchPortEntry.get()
      vlanEntry.delete(0, END)
