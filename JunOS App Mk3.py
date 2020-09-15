@@ -228,18 +228,15 @@ def getIP():
                 TextBoxData.see("end")
                 return
             else:
-                try:
-                    switchPort = (switchPort+".0")
-                    informationFromSwitch = connection.rpc.get_arp_table_information()
-                    arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
-                    aprTableDecoded = arpTableEncoded.splitlines()
-                    for line in aprTableDecoded:
-                        if switchPort in line:
-                            index = aprTableDecoded.index(line)
-                            IPAddress = aprTableDecoded[index -2]
-                            return IPAddress
-                except:
-                    return
+                switchPort = (switchPort+".0")
+                informationFromSwitch = connection.rpc.get_arp_table_information()
+                arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
+                aprTableDecoded = arpTableEncoded.splitlines()
+                for line in aprTableDecoded:
+                    if switchPort in line:
+                        index = aprTableDecoded.index(line)
+                        IPAddress = aprTableDecoded[index -2]
+                        return IPAddress
 
 
 ####----------------------------------------------------------------####   
@@ -324,50 +321,47 @@ def interfaceStatus():
                     TextBoxData.insert(END, "\nPlease enter a interface.\n")
                     monitorARPCheckbox.deselect()
         else:
-            try:
-                try:
-                    IPAddress = getIP()
-                    IPEntry.insert(END, IPAddress)
-                except:
-                     IPEntry.insert(END, "None Found")
+            IPAddress = getIP()
+            if IPAddress is None:
+                IPEntry.insert(END, "None Found")
+            else:
+                IPEntry.insert(END, IPAddress)
 
-                filter = '<terse/><interface-name></interface-name>'
-                informationFromSwitch = connection.rpc.get_interface_information(interface_name=switchPort, filter_xml=filter)
-                interfaceInfo = etree.tostring(informationFromSwitch, encoding='unicode')
-                splitString = interfaceInfo.split("\n")
-                adminStatus = splitString[3]
-                operStatus = splitString[5]
+            filter = '<terse/><interface-name></interface-name>'
+            informationFromSwitch = connection.rpc.get_interface_information(interface_name=switchPort, filter_xml=filter)
+            interfaceInfo = etree.tostring(informationFromSwitch, encoding='unicode')
+            splitString = interfaceInfo.split("\n")
+            adminStatus = splitString[3]
+            operStatus = splitString[5]
 
-                filter = '<interfaces><interface><name>'+switchPort+'</name><unit><name>0</name><family><ethernet-switching><vlan><members/></vlan></ethernet-switching></family></unit></interface></interfaces>'
-                result2 = connection.rpc.get_config(filter_xml=filter)
-                interfaceVlan = etree.tostring(result2, encoding='unicode', pretty_print=True)
-                interfaceVlanList = interfaceVlan.split("\n")
-                vlanLine = interfaceVlanList[9]
-                currentVlan = vlanRegEx.search(vlanLine)
-                currentVlan = currentVlan.group(0)
+            filter = '<interfaces><interface><name>'+switchPort+'</name><unit><name>0</name><family><ethernet-switching><vlan><members/></vlan></ethernet-switching></family></unit></interface></interfaces>'
+            result2 = connection.rpc.get_config(filter_xml=filter)
+            interfaceVlan = etree.tostring(result2, encoding='unicode', pretty_print=True)
+            interfaceVlanList = interfaceVlan.split("\n")
+            vlanLine = interfaceVlanList[9]
+            currentVlan = vlanRegEx.search(vlanLine)
+            currentVlan = currentVlan.group(0)
 
 #-------------------NEED TO CALL A FUNCTION HERE----------------------------------
-                switchPort = (switchPort+".0")
-                informationFromSwitch = connection.rpc.get_arp_table_information()
-                arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
-                aprTableDecoded = arpTableEncoded.splitlines()
-                for line in aprTableDecoded:
-                    if switchPort in line:
-                        index = aprTableDecoded.index(line)
-                        MAC = aprTableDecoded[index -6]
-                adminEntry.insert(END, adminStatus)
-                operEntry.insert(END, operStatus)
-                vlanEntry.insert(END, currentVlan)
-                MACEntry.insert(END, MAC)
-                
+            switchPort = (switchPort+".0")
+            informationFromSwitch = connection.rpc.get_arp_table_information()
+            arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
+            aprTableDecoded = arpTableEncoded.splitlines()
+            for line in aprTableDecoded:
+                if switchPort in line:
+                    index = aprTableDecoded.index(line)
+                    MAC = aprTableDecoded[index -6]
+            adminEntry.insert(END, adminStatus)
+            operEntry.insert(END, operStatus)
+            vlanEntry.insert(END, currentVlan)
+            MACEntry.insert(END, MAC)
+            
 #-------------------NEED TO CALL A FUNCTION HERE----------------------------------
 
 
-                TextBoxData.insert(END, "\nAdministratively: " +adminStatus+ "\t\t  |  Physically: " + operStatus+ "\t\t  |  Current Vlan : " +currentVlan+ "\n")
-                TextBoxData.see("end")
-            except:
-                TextBoxData.insert(END, "\nInterface not found on switch, this interface has no SFP.\n")
-                TextBoxData.see("end")
+            TextBoxData.insert(END, "\nAdministratively: " +adminStatus+ "\t\t  |  Physically: " + operStatus+ "\t\t  |  Current Vlan : " +currentVlan+ "\n")
+            TextBoxData.see("end")
+        
  
 
  ####----------------------------------------------------------------####
