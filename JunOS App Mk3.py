@@ -214,7 +214,6 @@ def getIP():
     switchPort = SwitchPortEntry.get()
     IPEntry.delete(0, END)
     if connection is None:
-        monitorARPCheckbox.deselect()
         TextBoxData.insert(END, "\nPlease logon.\n")
         TextBoxData.see("end")
     else:
@@ -241,12 +240,11 @@ def getIP():
 
 
 ####----------------------------------------------------------------####   
-# Get MAC - Not working
+# Get MAC - Working
 def getMAC():
      switchPort = SwitchPortEntry.get()
      IPEntry.delete(0, END)
      if connection is None:
-         monitorARPCheckbox.deselect()
          TextBoxData.insert(END, "\nPlease logon.\n")
          TextBoxData.see("end")
      else:
@@ -273,8 +271,73 @@ def getMAC():
                         MACAddress = macReg1.group(0)
                         return MACAddress
 
-                        
 
+####----------------------------------------------------------------####
+# Get Vlan - Working
+def getVlan():
+     switchPort = SwitchPortEntry.get()
+     vlanEntry.delete(0, END)
+     if connection is None:
+         TextBoxData.insert(END, "\nPlease logon.\n")
+         TextBoxData.see("end")
+     else:
+        if switchPort == (''):
+             TextBoxData.insert(END, "\nPlease enter a interface.\n")
+             TextBoxData.see("end")
+             return
+        else:
+            vlanReg = vlanRegEx.search(switchPort)
+            if vlanReg is None:
+                TextBoxData.insert(END, "\nInvalid interface. Please enter valid interface.\n")
+                TextBoxData.see("end")
+                return
+            else:
+                switchPort = (switchPort+".0")
+                informationFromSwitch = connection.rpc.get_ethernet_switching_table_information()
+                ethernetTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode', pretty_print=True)
+                ethernetTableDecoded = ethernetTableEncoded.splitlines()
+                for line in ethernetTableDecoded:
+                    if switchPort in line:
+                        index = ethernetTableDecoded.index(line)
+                        print(index)
+                        vlanReg = ethernetTableDecoded[index -4]
+                        print(vlanReg)
+                        vlanReg1 = vlanReg.search(vlanReg)
+                        print(vlanReg1)
+                        currentVlan = vlanReg1.group(0)
+                        print(currentVlan)
+                        return currentVlan
+
+
+####----------------------------------------------------------------####   
+# Get Up Up or Down Down - Working
+def interfaceUpDown():
+    switchPort = SwitchPortEntry.get()
+    adminEntry.delete(0, END)
+    operEntry.delete(0, END)
+    if connection is None:
+        TextBoxData.insert(END, "\nPlease logon.\n")
+        TextBoxData.see("end")
+    else:
+        if switchPort == (''):
+            TextBoxData.insert(END, "\nPlease enter a interface.\n")
+            TextBoxData.see("end")
+            return
+        else:
+            portReg = interfaceRegEx.search(switchPort)
+            if portReg is None:
+                TextBoxData.insert(END, "\nInvalid interface. Please enter valid interface.\n")
+                TextBoxData.see("end")
+                return
+            else:
+                filter = '<terse/><interface-name></interface-name>'
+                informationFromSwitch = connection.rpc.get_interface_information(interface_name=switchPort, filter_xml=filter)
+                interfaceInfo = etree.tostring(informationFromSwitch, encoding='unicode')
+                splitString = interfaceInfo.split("\n")
+                adminStatus = splitString[3]
+                operStatus = splitString[5]
+                updown = [adminStatus, operStatus]
+                return updown
 
 ####----------------------------------------------------------------####   
 # Show interface-logs function
@@ -308,14 +371,14 @@ def monitorInterface():
 ####----------------------------------------------------------------####
 # Show Interface Status
 def interfaceStatus():
+    switchPort = SwitchPortEntry.get()
     adminEntry.delete(0, END)
     operEntry.delete(0, END)
     vlanEntry.delete(0, END)
     MACEntry.delete(0, END)
     IPEntry.delete(0, END)
     Dot1xEntry.delete(0, END)
-    switchPort = SwitchPortEntry.get()  # Get switchport from entrybox in mainWindow
-    #switchName = SwitchNameEntry.get()  # Get switchName from entrybox in mainWindow
+    
     if connection is None:
         monitorInterfaceCheckbox.deselect()
         TextBoxData.insert(END, "\nPlease logon.\n")
@@ -324,6 +387,10 @@ def interfaceStatus():
                     TextBoxData.insert(END, "\nPlease enter a interface.\n")
                     monitorARPCheckbox.deselect()
         else:
+            interfaceStatus = interfaceUpDown()
+            adminStatus = interfaceStatus[0]
+            operStatus = interfaceStatus[1]
+
             IPAddress = getIP()
             if IPAddress is None:
                 IPAddress = "---.---.---.---"
@@ -332,32 +399,13 @@ def interfaceStatus():
             if MACAdress is None:
                 MACAdress = "--:--:--:--:--:--"
 
-            filter = '<terse/><interface-name></interface-name>'
-            informationFromSwitch = connection.rpc.get_interface_information(interface_name=switchPort, filter_xml=filter)
-            interfaceInfo = etree.tostring(informationFromSwitch, encoding='unicode')
-            splitString = interfaceInfo.split("\n")
-            adminStatus = splitString[3]
-            operStatus = splitString[5]
+            currentVlan = getVlan()
+            if currentVlan is None:
+                currentVlan = "No Vlan Assigned"
 
-            #filter = '<interfaces><interface><name>'+switchPort+'</name><unit><name>0</name><family><ethernet-switching><vlan><members/></vlan></ethernet-switching></family></unit></interface></interfaces>'
-            #result2 = connection.rpc.get_config(filter_xml=filter)
-            #interfaceVlan = etree.tostring(result2, encoding='unicode', pretty_print=True)
-            #interfaceVlanList = interfaceVlan.split("\n")
-            #vlanLine = interfaceVlanList[9]
-            #currentVlan = vlanRegEx.search(vlanLine)
-            #currentVlan = currentVlan.group(0)
-
-#-------------------NEED TO CALL A FUNCTION HERE----------------------------------
-            switchPort = (switchPort+".0")
-            informationFromSwitch = connection.rpc.get_arp_table_information()
-            arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
-            aprTableDecoded = arpTableEncoded.splitlines()
-            for line in aprTableDecoded:
-                if switchPort in line:
-                    index = aprTableDecoded.index(line)
             adminEntry.insert(END, adminStatus)
             operEntry.insert(END, operStatus)
-            #vlanEntry.insert(END, currentVlan)
+            vlanEntry.insert(END, currentVlan)
             MACEntry.insert(END, MACAdress)
             IPEntry.insert(END, IPAddress)
 
