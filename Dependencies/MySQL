@@ -1,0 +1,3 @@
+This App uses a MySQL Database for storage of data.
+
+Currently it uses a SQLite3 databse for looking up switch names and IP address's however that will migrate over to MySQL.
