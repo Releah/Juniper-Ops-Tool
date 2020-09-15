@@ -202,9 +202,9 @@ def showArpFunc():
                             index = aprTableDecoded.index(line)
                             TextBoxData.insert(END, "\nMAC: "+aprTableDecoded[index -6] + "\t\t |   IP Address: " + aprTableDecoded[index -2] + "\t\t|   Interface: " + aprTableDecoded[index]+"\n")
                             TextBoxData.see("end")
-            time.sleep(1)
-            switchPort = SwitchPortEntry.get()
-            monitorARPTF = monitorARPValue.get()
+        time.sleep(1)
+        switchPort = SwitchPortEntry.get()
+        monitorARPTF = monitorARPValue.get()
             
 
 ####----------------------------------------------------------------####   
@@ -228,15 +228,18 @@ def getIP():
                 TextBoxData.see("end")
                 return
             else:
-                switchPort = (switchPort+".0")
-                informationFromSwitch = connection.rpc.get_arp_table_information()
-                arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
-                aprTableDecoded = arpTableEncoded.splitlines()
-                for line in aprTableDecoded:
-                    if switchPort in line:
-                        index = aprTableDecoded.index(line)
-                        IPAddress = aprTableDecoded[index -2]
-                        return IPAddress
+                try:
+                    switchPort = (switchPort+".0")
+                    informationFromSwitch = connection.rpc.get_arp_table_information()
+                    arpTableEncoded = etree.tostring(informationFromSwitch, encoding='unicode')
+                    aprTableDecoded = arpTableEncoded.splitlines()
+                    for line in aprTableDecoded:
+                        if switchPort in line:
+                            index = aprTableDecoded.index(line)
+                            IPAddress = aprTableDecoded[index -2]
+                            return IPAddress
+                except:
+                    return
 
 
 ####----------------------------------------------------------------####   
@@ -322,6 +325,12 @@ def interfaceStatus():
                     monitorARPCheckbox.deselect()
         else:
             try:
+                try:
+                    IPAddress = getIP()
+                    IPEntry.insert(END, IPAddress)
+                except:
+                     IPEntry.insert(END, "None Found")
+
                 filter = '<terse/><interface-name></interface-name>'
                 informationFromSwitch = connection.rpc.get_interface_information(interface_name=switchPort, filter_xml=filter)
                 interfaceInfo = etree.tostring(informationFromSwitch, encoding='unicode')
@@ -346,12 +355,11 @@ def interfaceStatus():
                     if switchPort in line:
                         index = aprTableDecoded.index(line)
                         MAC = aprTableDecoded[index -6]
-                        IP = aprTableDecoded[index -2]
                 adminEntry.insert(END, adminStatus)
                 operEntry.insert(END, operStatus)
                 vlanEntry.insert(END, currentVlan)
                 MACEntry.insert(END, MAC)
-                IPEntry.insert(END, IP)
+                
 #-------------------NEED TO CALL A FUNCTION HERE----------------------------------
 
 
