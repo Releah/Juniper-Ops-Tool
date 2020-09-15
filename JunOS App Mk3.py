@@ -6,13 +6,12 @@ import os
 import time
 import threading
 import sqlite3
-from tkinter import *
+from tkinter import Button, Checkbutton, Label, Text, Entry, END, Tk, BooleanVar
 from PIL import ImageTk,Image
 from jnpr.junos import Device
 from lxml import etree
 from jnpr.junos.utils.config import Config
 
-#blob
 
 ####----------------------------------------------------------------####
 ####---------------------------#tkinter#----------------------------####
@@ -661,7 +660,7 @@ toggleAdminButton = Button(mainWindow, text="Admin Toggle", command=toggleAdmin)
 toggleAdminButton.config(font=("Verdana", 10, "bold"))
 toggleAdminButton.place(x=480, y=310, height=30, width=135)
 
-toggledot1xButton = Button(mainWindow, text="Toggle dot1x", command=getMAC)
+toggledot1xButton = Button(mainWindow, text="Toggle dot1x")#, command=getMAC)
 toggledot1xButton.config(font=("Verdana", 10, "bold"))
 toggledot1xButton.place(x=617, y=310, height=30, width=135)
 
