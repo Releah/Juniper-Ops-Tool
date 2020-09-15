@@ -1,0 +1,31 @@
+Python Packages:
+
+bcrypt-3.2.0
+cffi-1.14.2
+cryptography-3.0
+future-0.18.2.tar.gz
+Jinja2-2.11.2-py2.py3-none-any.whl
+junos-eznc-2.5.2
+lxml-4.5.2-cp38-cp38-win32.whl
+MarkupSafe-1.1.1-cp38-cp38-win32.whl
+mysql-connector-python-8.0.21
+ncclient-0.6.9.tar.gz
+netaddr-0.8.0-py2.py3-none-any.whl
+ntc_templates-1.5.0-py3-none-any.whl
+paramiko-2.7.1
+protobuf-3.13.0
+pycparser-2.20-py2.py3-none-any.whl
+PyNaCl-1.4.0
+pyodbc-4.0.30
+pyparsing-2.4.7-py2.py3-none-any.whl
+pyserial-3.4-py2.py3-none-any.whl
+PyYAML-5.3.1-cp38-cp38-win32.whl
+scp-0.13.2-py2.py3-none-any.whl
+setuptools-47.1.0
+six-1.15.0
+*textfsm-1.1.0
+transitions-0.8.2-py2.py3-none-any.whl
+yamlordereddictloader-0.4.0.tar.gz
+
+*textfsm for windows is required if you are running on a windows enviroment. 
+link to --> 
